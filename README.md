@@ -23,5 +23,5 @@ You must set:
  
 5. the e-mail address of receiver
  
-6. the time of loop in minutes, for example with you want to check your e-mail once in a hour you must set 60
+6. the time of loop in minutes, for example if you want to check your IP once in a hour you must set 60
  
