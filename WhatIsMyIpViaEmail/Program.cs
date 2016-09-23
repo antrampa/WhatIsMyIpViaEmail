@@ -1,13 +1,10 @@
 ﻿using HtmlAgilityPack;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
-using System.Net;
 using System.Net.Mail;
 using System.Net.Mime;
+using System.Threading;
 
 
 namespace WhatIsMyIpViaEmail
@@ -16,50 +13,68 @@ namespace WhatIsMyIpViaEmail
     {
         static void Main(string[] args)
         {
-            string url = "http://whatismyipaddress.com/";// "http://www.whatsmyip.org/";
-            string stringhtml = string.Empty;
-            var htmlDoc = new HtmlAgilityPack.HtmlDocument();
-            htmlDoc.OptionReadEncoding = false;
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.UserAgent = @"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36";
-            request.Method = "GET";
-            using (var response = (HttpWebResponse)request.GetResponse())
-            {
-                using (var stream = response.GetResponseStream())
-                {
-                    htmlDoc.Load(stream, Encoding.UTF8);
-                }
+            int LoopTimeInMinilliseconds = Settings.Default.LoopTimeInMinutes * 60 * 1000; 
 
-                var aTags = htmlDoc.DocumentNode.SelectNodes("//a");
-                int counter = 1;
-                
-                if (aTags != null)
+            // Create a Timer object that knows to call our TimerCallback
+            // method once every 2000 milliseconds.
+            Timer t = new Timer(ParseIPHtml, null, 0, LoopTimeInMinilliseconds);
+            // Wait for the user to hit <Enter>
+            Console.ReadLine();
+        }
+
+        private static void ParseIPHtml(Object o)
+        {
+            try
+            {
+                string url = "http://whatismyipaddress.com/";// "http://www.whatsmyip.org/";
+                string stringhtml = string.Empty;
+                var htmlDoc = new HtmlAgilityPack.HtmlDocument();
+                htmlDoc.OptionReadEncoding = false;
+                var request = (HttpWebRequest)WebRequest.Create(url);
+                request.UserAgent = @"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36";
+                request.Method = "GET";
+                using (var response = (HttpWebResponse)request.GetResponse())
                 {
-                    foreach (var aTag in aTags)
+                    using (var stream = response.GetResponseStream())
                     {
-                        stringhtml += counter + ". " + aTag.InnerHtml + " - " + aTag.Attributes["href"].Value + "\t" + "<br />"; //ip
-                        if(aTag.Attributes["href"].Value.StartsWith("//whatismyipaddress.com/ip/"))
+                        htmlDoc.Load(stream, Encoding.UTF8);
+                    }
+
+                    var aTags = htmlDoc.DocumentNode.SelectNodes("//a");
+                    int counter = 1;
+
+                    if (aTags != null)
+                    {
+                        foreach (var aTag in aTags)
                         {
-                            string currentIP = aTag.InnerHtml;// Attributes["href"].Value;
-                            if(currentIP != Settings.Default.MyIp)
+                            stringhtml += counter + ". " + aTag.InnerHtml + " - " + aTag.Attributes["href"].Value + "\t" + "<br />"; //ip
+                            if (aTag.Attributes["href"].Value.StartsWith("//whatismyipaddress.com/ip/"))
                             {
-                                Settings.Default.MyIp = currentIP;
-                                Settings.Default.Save();
-                                //Send e-mail
-                                SendEmail(currentIP);
+                                string currentIP = aTag.InnerHtml;// Attributes["href"].Value;
+                                if (currentIP != Settings.Default.MyIp)
+                                {
+                                    Settings.Default.MyIp = currentIP;
+                                    Settings.Default.Save();
+                                    //Send e-mail
+                                    SendEmail(currentIP);
+                                }
+
+                                Console.WriteLine("MyIpIs");
+                                Console.WriteLine(aTag.InnerHtml);
                             }
 
-                            Console.WriteLine("MyIpIs");
-                            Console.WriteLine(aTag.InnerHtml);
+                            counter++;
                         }
-                        
-                        counter++;
                     }
                 }
-            }
 
-            Console.WriteLine(url);
-            //Console.WriteLine(stringhtml);
+                Console.WriteLine(url);
+                //Console.WriteLine(stringhtml);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("SendEmail: " + ex.Message);
+            }
         }
 
         private static void SendEmail(string currentIpAddress)
@@ -104,6 +119,7 @@ namespace WhatIsMyIpViaEmail
                 myMail.IsBodyHtml = true;
 
                 mySmtpClient.Send(myMail);
+                Console.WriteLine("E-mail sent successfully");
             }
             catch (SmtpException ex)
             {
@@ -113,7 +129,6 @@ namespace WhatIsMyIpViaEmail
             {
                 Console.WriteLine("SendEmail: " + ex.Message);
             }
-
         }
 
     }
