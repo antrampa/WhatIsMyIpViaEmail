@@ -1,0 +1,4 @@
+/.vs/WhatIsMyIpViaEmail/v14/*.suo
+/WhatIsMyIpViaEmail/bin/Debug
+/WhatIsMyIpViaEmail/obj/Debug
+/packages/HtmlAgilityPack.1.4.9.5
