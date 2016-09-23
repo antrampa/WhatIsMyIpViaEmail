@@ -74,9 +74,10 @@ namespace WhatIsMyIpViaEmail
                 string password = Settings.Default.SendEmailPassword; //"password";
                 string smtp = Settings.Default.SendEmailSMTP; //"smtp.gmail.com";
                 int port = Settings.Default.SendEmailSMTPPort; //587;
+                bool enableSsl = Settings.Default.EnableSsl; //True;
 
                 SmtpClient mySmtpClient = new SmtpClient(smtp, port);
-                mySmtpClient.EnableSsl = true;
+                mySmtpClient.EnableSsl = enableSsl;
                 // set smtp-client with basicAuthentication
                 mySmtpClient.UseDefaultCredentials = false;
                 System.Net.NetworkCredential basicAuthenticationInfo = new
